@@ -1,0 +1,32 @@
+# prod
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+# 프로덕션 로깅 설정
+logging:
+  level:
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    org.ddcn41.ticketing_system: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# JWT 프로덕션 설정
+jwt:
+  secret: ${JWT_SECRET}  # 환경변수에서만 가져오기
+  access-token-validity-ms: 3600000
+
+# Swagger 프로덕션 설정 (비활성화)
+app:
+  swagger:
+    quick-auth:
+      enabled: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

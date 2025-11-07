@@ -1,0 +1,56 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+dependencies {
+    // Common
+    implementation project(':module-common')
+    implementation project(':authorization-spring-boot-starter')
+
+    // 필수
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // aws lambda
+    implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.0.3'
+    implementation 'com.amazonaws:aws-lambda-java-core:1.2.3'
+    implementation 'com.amazonaws:aws-lambda-java-events:3.11.3'
+
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+bootJar {
+    enabled = true
+    mainClass = 'org.ddcn41.ticketing_system.TicketingAdminApplication'
+}
+jar {
+    enabled = false
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+task buildLambdaZip(type: Zip) {
+    archiveFileName = 'admin-api-lambda.zip'
+    destinationDirectory = file("$buildDir/distributions")
+
+    from(compileJava) {
+        into('')
+    }
+
+    from(processResources) {
+        into('')
+    }
+
+    from(configurations.runtimeClasspath) {
+        into('lib')
+    }
+}
+
+build.dependsOn buildLambdaZip
