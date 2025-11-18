@@ -1,0 +1,58 @@
+name: Backend CI Build & Push
+
+on:
+  push:
+    branches: [ "dev/yhj", "feat/yhj" ]
+  pull_request:
+
+env:
+  AWS_REGION: ap-northeast-2
+  REGISTRY: 911723818289.dkr.ecr.ap-northeast-2.amazonaws.com
+  IMAGE_CORE: yhj/ticketing-core-api
+  IMAGE_ADMIN: yhj/ticketing-admin-api
+  IMAGE_QUEUE: yhj/ticketing-queue-api
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build
+        run: ./gradlew build -x test
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::911723818289:role/backend-v3-github-actions
+          aws-region: ap-northeast-2
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract short commit SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build Docker images
+        run: |
+          docker build -t $REGISTRY/$IMAGE_CORE:${{ env.sha_short }} -f module-api/Dockerfile .
+          docker build -t $REGISTRY/$IMAGE_ADMIN:${{ env.sha_short }} -f module-api-admin/Dockerfile .
+          docker build -t $REGISTRY/$IMAGE_QUEUE:${{ env.sha_short }} -f module-queue/Dockerfile .
+
+      - name: Push Docker images
+        run: |
+          docker push $REGISTRY/$IMAGE_CORE:${{ env.sha_short }}
+          docker push $REGISTRY/$IMAGE_ADMIN:${{ env.sha_short }}
+          docker push $REGISTRY/$IMAGE_QUEUE:${{ env.sha_short }}
