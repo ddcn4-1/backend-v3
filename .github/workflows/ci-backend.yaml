@@ -73,11 +73,12 @@ jobs:
       # UPDATE MANIFEST REPO (kbsp-jy 브랜치)
       # ==================================================================
       - name: Clone Manifest Repo
-        run: |
-          git clone --branch kbsp/argocd https://github.com/ddcn4-1/terraform-v3.git manifest
-          cd manifest
-          git config user.email "action@github.com"
-          git config user.name "GitHub Actions"
+        uses: actions/checkout@v4
+        with:
+          repository: ddcn4-1/terraform-v3
+          token: ${{ secrets.GITHUB_TOKEN }}   # ★ 추가
+          ref: kbsp/argocd
+          path: manifest
 
       # ---------------------------
       # UPDATE core-api IMAGE TAG
