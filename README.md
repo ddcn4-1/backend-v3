@@ -151,3 +151,5 @@ use:
     auth : false
 ```
 <img width="1820" height="1154" alt="carbon (1)" src="https://github.com/user-attachments/assets/226c6d5a-f21e-4138-ad6b-93397a6dc851" />
+
+# Argocd test
