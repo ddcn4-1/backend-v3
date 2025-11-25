@@ -1,0 +1,129 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: ["main", "feat/guk"]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY_BASE: 911723818289.dkr.ecr.ap-northeast-2.amazonaws.com/guk
+  HELM_REPO: ddcn4-1/terraform-v3 # Helm 차트가 있는 리포지토리
+  HELM_VALUES_PATH: eks/dh/ticketing-chart/values.yaml
+
+permissions:
+  id-token: write # AWS OIDC 인증을 위해 필요
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Backend Code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and Push API Service
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            -f module-api/Dockerfile \
+            -t ${{ env.ECR_REGISTRY_BASE }}/ticketing-api:$IMAGE_TAG \
+            -t ${{ env.ECR_REGISTRY_BASE }}/ticketing-api:latest \
+            . \
+            --push
+
+      - name: Build and Push Admin Service
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            -f module-api-admin/Dockerfile \
+            -t ${{ env.ECR_REGISTRY_BASE }}/ticketing-admin:$IMAGE_TAG \
+            -t ${{ env.ECR_REGISTRY_BASE }}/ticketing-admin:latest \
+            . \
+            --push
+
+      - name: Build and Push Queue Service
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            -f module-queue/Dockerfile \
+            -t ${{ env.ECR_REGISTRY_BASE }}/ticketing-queue:$IMAGE_TAG \
+            -t ${{ env.ECR_REGISTRY_BASE }}/ticketing-queue:latest \
+            . \
+            --push
+
+      - name: Checkout Helm Config Repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.HELM_REPO }}
+          token: ${{ secrets.GH_PAT }}
+          path: helm-repo
+
+      - name: Update Image Tags in Helm Values
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd helm-repo
+
+          # API Service 태그 업데이트
+          sed -i "s|tag: \".*\" # ticketing-api|tag: \"$IMAGE_TAG\" # ticketing-api|g" ${{ env.HELM_VALUES_PATH }}
+
+          # Admin Service 태그 업데이트  
+          sed -i "s|tag: \".*\" # ticketing-admin|tag: \"$IMAGE_TAG\" # ticketing-admin|g" ${{ env.HELM_VALUES_PATH }}
+
+          # Queue Service 태그 업데이트
+          sed -i "s|tag: \".*\" # ticketing-queue|tag: \"$IMAGE_TAG\" # ticketing-queue|g" ${{ env.HELM_VALUES_PATH }}
+
+          # 변경 사항 확인
+          echo "=== Changes made ==="
+          git diff ${{ env.HELM_VALUES_PATH }}
+
+      - name: Commit and Push Changes
+        run: |
+          cd helm-repo
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add ${{ env.HELM_VALUES_PATH }}
+
+          # 변경사항이 있는지 확인
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update image tags to ${{ github.sha }}
+
+            - ticketing-api: ${{ github.sha }}
+            - ticketing-admin: ${{ github.sha }}  
+            - ticketing-queue: ${{ github.sha }}"
+            git push
+          fi
