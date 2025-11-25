@@ -7,11 +7,11 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REGISTRY_BASE: 911723818289.dkr.ecr.ap-northeast-2.amazonaws.com/guk
-  HELM_REPO: ddcn4-1/terraform-v3 # Helm 차트가 있는 리포지토리
+  HELM_REPO: ddcn4-1/terraform-v3
   HELM_VALUES_PATH: eks/dh/ticketing-chart/values.yaml
 
 permissions:
-  id-token: write # AWS OIDC 인증을 위해 필요
+  id-token: write
   contents: read
 
 jobs:
@@ -47,6 +47,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      # 3개 서비스 빌드 & 푸시 (생략 없이 모두 포함)
       - name: Build and Push API Service
         env:
           IMAGE_TAG: ${{ github.sha }}
@@ -83,29 +84,24 @@ jobs:
             . \
             --push
 
+      # Terraform 리포지토리 업데이트
       - name: Checkout Helm Config Repo
         uses: actions/checkout@v3
         with:
           repository: ${{ env.HELM_REPO }}
           token: ${{ secrets.GH_PAT }}
           path: helm-repo
-          ref: eks-dh
+          ref: eks-dh  # <--- 중요: eks-dh 브랜치 지정
 
       - name: Update Image Tags in Helm Values
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           cd helm-repo
-
-          # API Service 태그 업데이트
-          sed -i "s|tag: \".*\" # ticketing-api|tag: \"$IMAGE_TAG\" # ticketing-api|g" ${{ env.HELM_VALUES_PATH }}
-
-          # Admin Service 태그 업데이트  
-          sed -i "s|tag: \".*\" # ticketing-admin|tag: \"$IMAGE_TAG\" # ticketing-admin|g" ${{ env.HELM_VALUES_PATH }}
-
-          # Queue Service 태그 업데이트
-          sed -i "s|tag: \".*\" # ticketing-queue|tag: \"$IMAGE_TAG\" # ticketing-queue|g" ${{ env.HELM_VALUES_PATH }}
-
+          
+          # [수정된 부분] 복잡한 주석 찾기 대신, 단순하게 "tag: latest"를 찾아서 교체합니다.
+          sed -i 's/tag: "latest"/tag: "'$IMAGE_TAG'"/' ${{ env.HELM_VALUES_PATH }}
+          
           # 변경 사항 확인
           echo "=== Changes made ==="
           git diff ${{ env.HELM_VALUES_PATH }}
@@ -116,15 +112,10 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add ${{ env.HELM_VALUES_PATH }}
-
-          # 변경사항이 있는지 확인
+          
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Update image tags to ${{ github.sha }}
-
-            - ticketing-api: ${{ github.sha }}
-            - ticketing-admin: ${{ github.sha }}  
-            - ticketing-queue: ${{ github.sha }}"
+            git commit -m "Update image tags to ${{ github.sha }}"
             git push
           fi
