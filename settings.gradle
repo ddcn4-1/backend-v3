@@ -8,17 +8,14 @@ pluginManagement {
         id 'io.spring.dependency-management' version '1.1.7'
     }
 }
-
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)  // 변경: FAIL -> PREFER
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         mavenCentral()
         mavenLocal()
     }
 }
-
 rootProject.name = 'ticketing-system'
-
 include 'module-common'
 include 'module-auth'
 include 'module-core'
@@ -26,5 +23,4 @@ include 'module-queue'
 include 'module-metric'
 include 'module-api'
 include 'module-api-admin'
-
 include 'authorization-spring-boot-starter'

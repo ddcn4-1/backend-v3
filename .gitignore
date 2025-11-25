@@ -61,6 +61,8 @@ application-local.properties
 application-dev.yml
 application-dev.properties
 application-prod.properties
+application-prod.yml
+application-prod.yaml
 application.yml
 application.properties
 application.yaml
@@ -88,3 +90,5 @@ test-results/
 *.pid.lock
 
 infra/config/cognito-common.yml
+/k8s/
+/infrastructure/

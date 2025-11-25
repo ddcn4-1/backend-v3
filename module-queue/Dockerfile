@@ -1,50 +1,55 @@
 # module-queue/Dockerfile
-
 # Build stage
 FROM gradle:8.5-jdk21 AS builder
 
 WORKDIR /app
 
-# Gradle 래퍼와 설정 파일 복사
+# Gradle 설정 파일들 복사
 COPY gradle gradle
 COPY gradlew .
 COPY settings.gradle .
 COPY build.gradle .
 RUN chmod +x gradlew
 
-# Queue 모듈의 build.gradle 복사
+# 모든 모듈의 build.gradle 복사 (settings.gradle에 정의된 모든 모듈)
+COPY module-common/build.gradle module-common/
+COPY module-core/build.gradle module-core/
+COPY module-auth/build.gradle module-auth/
+COPY module-metric/build.gradle module-metric/
+COPY module-api/build.gradle module-api/
 COPY module-queue/build.gradle module-queue/
+COPY module-api-admin/build.gradle module-api-admin/
+COPY authorization-spring-boot-starter/build.gradle authorization-spring-boot-starter/
 
-# 의존성 다운로드 (캐시 최적화)
-RUN chmod +x gradlew
-RUN ./gradlew dependencies --no-daemon || true
-
-# 소스 코드 복사
+# 모든 모듈 소스 코드 복사
 COPY module-common module-common
 COPY module-core module-core
-COPY module-metric module-metric
 COPY module-auth module-auth
+COPY module-metric module-metric
 COPY module-api module-api
 COPY module-queue module-queue
-# (api 모듈은 queue 빌드에 직접 필요 없으면 생략 가능)
+COPY module-api-admin module-api-admin
+COPY authorization-spring-boot-starter authorization-spring-boot-starter
+
+# 의존성 다운로드
+RUN ./gradlew :module-queue:dependencies --no-daemon || true
 
 # Queue 모듈만 빌드
-RUN ./gradlew :module-queue:bootJar --no-daemon
+RUN ./gradlew :module-queue:bootJar --no-daemon --stacktrace
 
 # Runtime stage
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-# 헬스체크용 curl 설치
+# curl 설치
 RUN apt-get update && \
     apt-get install -y curl && \
     rm -rf /var/lib/apt/lists/*
 
-# 빌드된 JAR 파일 복사
+# JAR 파일 복사
 COPY --from=builder /app/module-queue/build/libs/*.jar app.jar
 
-# 포트 노출
 EXPOSE 8083
 
 # 헬스체크
@@ -57,5 +62,5 @@ ENTRYPOINT ["java", \
     "-Xmx512m", \
     "-XX:+UseG1GC", \
     "-XX:+UseContainerSupport", \
-    "-Djava.security.egd=file:/dev/./urandom", \
+    "-Dspring.profiles.active=prod", \
     "-jar", "/app/app.jar"]

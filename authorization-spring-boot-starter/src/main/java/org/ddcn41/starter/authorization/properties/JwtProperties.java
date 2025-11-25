@@ -71,7 +71,7 @@ public class JwtProperties {
         public static class Redis {
             // Getters and Setters
             private String host = "localhost";
-            private int port = 6379;
+            private int port = 6381;
             private String password;
             private int database = 0;
             private String keyPrefix = "jwt:blacklist:";

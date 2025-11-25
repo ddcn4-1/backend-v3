@@ -12,6 +12,10 @@ dependencies {
     // 필수
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Actuator 추가 (Health check용)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+
     // aws lambda
     implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.0.3'
     implementation 'com.amazonaws:aws-lambda-java-core:1.2.3'

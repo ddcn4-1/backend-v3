@@ -17,6 +17,7 @@ COPY module-core/build.gradle module-core/
 COPY module-auth/build.gradle module-auth/
 COPY module-metric/build.gradle module-metric/
 COPY module-api/build.gradle module-api/
+COPY authorization-spring-boot-starter/build.gradle authorization-spring-boot-starter/
 
 # 의존성 다운로드 (캐시 최적화)
 RUN chmod +x gradlew
@@ -29,24 +30,23 @@ COPY module-auth module-auth
 COPY module-metric module-metric
 COPY module-api module-api
 COPY module-queue module-queue
-
+COPY module-api-admin module-api-admin
+COPY authorization-spring-boot-starter authorization-spring-boot-starter
 # API 모듈만 빌드
 RUN ./gradlew :module-api:bootJar --no-daemon
-
 # Runtime stage
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-# 헬스체크용 curl 설치
+# curl 설치
 RUN apt-get update && \
     apt-get install -y curl && \
     rm -rf /var/lib/apt/lists/*
 
-# 빌드된 JAR 파일 복사
+# JAR 파일 복사
 COPY --from=builder /app/module-api/build/libs/*.jar app.jar
 
-# 포트 노출
 EXPOSE 8082
 
 # 헬스체크
@@ -59,5 +59,5 @@ ENTRYPOINT ["java", \
     "-Xmx800m", \
     "-XX:+UseG1GC", \
     "-XX:+UseContainerSupport", \
-    "-Djava.security.egd=file:/dev/./urandom", \
+    "-Dspring.profiles.active=prod", \
     "-jar", "/app/app.jar"]
