@@ -89,6 +89,7 @@ jobs:
           repository: ${{ env.HELM_REPO }}
           token: ${{ secrets.GH_PAT }}
           path: helm-repo
+          ref: eks-dh
 
       - name: Update Image Tags in Helm Values
         env:
