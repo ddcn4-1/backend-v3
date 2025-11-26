@@ -5,6 +5,7 @@ server:
     include-binding-errors: always  
     include-stacktrace: on_param
   
+spring:
   docker:  
     compose:  
       enabled: ${SPRING_DOCKER_COMPOSE_ENABLED:false}  
