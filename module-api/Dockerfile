@@ -1,5 +1,3 @@
-# module-api/Dockerfile
-
 # Build stage
 FROM gradle:8.5-jdk21 AS builder
 
@@ -32,6 +30,7 @@ COPY module-api module-api
 COPY module-queue module-queue
 COPY module-api-admin module-api-admin
 COPY authorization-spring-boot-starter authorization-spring-boot-starter
+
 # API 모듈만 빌드
 RUN ./gradlew :module-api:bootJar --no-daemon
 
@@ -39,6 +38,9 @@ RUN ./gradlew :module-api:bootJar --no-daemon
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
+
+# prod 프로필 활성화
+ENV SPRING_PROFILES_ACTIVE=prod
 
 # 헬스체크용 curl 설치
 RUN apt-get update && \

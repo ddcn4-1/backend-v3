@@ -1,32 +1,104 @@
-# prod
-
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-# 프로덕션 로깅 설정
-logging:
-  level:
-    org.springframework.security: WARN
-    org.springframework.web: WARN
-    org.ddcn41.ticketing_system: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-
-# JWT 프로덕션 설정
-jwt:
-  secret: ${JWT_SECRET}  # 환경변수에서만 가져오기
-  access-token-validity-ms: 3600000
-
-# Swagger 프로덕션 설정 (비활성화)
-app:
-  swagger:
-    quick-auth:
-      enabled: false
-
-springdoc:
-  api-docs:
-    enabled: false
-  swagger-ui:
-    enabled: false
+server:  
+  port: ${SERVER_PORT:8080}  
+  error:  
+    include-message: always  
+    include-binding-errors: always  
+    include-stacktrace: on_param  
+  
+spring:  
+  profiles:  
+    active: ${SPRING_PROFILES_ACTIVE:local}  
+  
+  docker:  
+    compose:  
+      enabled: ${SPRING_DOCKER_COMPOSE_ENABLED:false}  
+  
+  cloud:  
+    compatibility-verifier:  
+      enabled: false  
+  
+  data:  
+    redis:  
+      host: ${REDIS_HOST:localhost}  
+      port: ${REDIS_PORT:6379}  
+      timeout: ${REDIS_TIMEOUT:2000ms}  
+  
+feign:  
+  client:  
+    config:  
+      default:  
+        connectTimeout: 5000  
+        readTimeout: 5000  
+        loggerLevel: basic  
+  
+logging:  
+  level:  
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:INFO}  
+  
+springdoc:  
+  api-docs:  
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}
+    path: ${SPRINGDOC_API_DOCS_PATH:/v3/api-docs}  
+  swagger-ui:  
+    enabled: ${SPRINGDOC_SWAGGER_ENABLED:false}
+  packages-to-scan: ${SPRINGDOC_PACKAGES:org.ddcn41.ticketing_system}  
+  paths-to-match: ${SPRINGDOC_PATHS:/**}  
+  
+jwt:  
+  enabled: true  
+  cookie-name: id_token  
+  jwks-cache-duration: 300000  # 5분  
+  
+  cognito:  
+    region: ${COGNITO_REGION:ap-northeast-2}
+    user-pool-id: ${COGNITO_USER_POOL_ID}  
+    client-id: ${COGNITO_CLIENT_ID}  
+    validate-issuer: true  
+    validate-audience: true  
+    validate-token-use: true  
+  
+  blacklist:  
+    enabled: true  
+    redis:  
+      host: ${REDIS_HOST:localhost}  
+      port: ${REDIS_PORT:6379}  
+      database: ${REDIS_DATABASE:0}  
+      password: ${REDIS_PASSWORD:}  
+      key-prefix: "jwt:blacklist:"  
+      connection-timeout: 2000  
+      command-timeout: 1000  
+  
+use:  
+  legacy:  
+    auth: false  
+  
+auth:  
+  cognito:  
+    user-pool-id: ${COGNITO_USER_POOL_ID}  
+    client-id: ${COGNITO_CLIENT_ID}  
+    region: ${COGNITO_REGION:ap-northeast-2}  
+    enabled: ${COGNITO_ENABLED:true}  
+  
+booking:  
+  service:  
+    url: ${BOOKING_SERVICE_URL}  
+  
+performance:  
+  service:  
+    url: ${PERFORMANCE_SERVICE_URL}  
+  
+queue:  
+  service:  
+    url: ${QUEUE_SERVICE_URL}  
+  
+s3:  
+  service:  
+    url: ${S3_SERVICE_URL}  
+  
+seat:  
+  service:  
+    url: ${SEAT_SERVICE_URL}  
+  
+user:  
+  service:  
+    url: ${USER_SERVICE_URL}

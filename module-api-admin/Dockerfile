@@ -32,12 +32,17 @@ COPY module-api module-api
 COPY module-api-admin module-api-admin
 COPY authorization-spring-boot-starter authorization-spring-boot-starter
 COPY module-queue module-queue
+
 # API ADMIN 모듈만 빌드
 RUN ./gradlew :module-api-admin:bootJar --no-daemon
+
 # Runtime stage
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
+
+# prod 프로필 강제 적용
+ENV SPRING_PROFILES_ACTIVE=prod
 
 # 헬스체크용 curl 설치
 RUN apt-get update && \

@@ -1,0 +1,79 @@
+# module-queue/src/main/resources/application.yaml  
+server:  
+  port: ${SERVER_PORT:8080}
+  
+spring:  
+  application:  
+    name: queue-service
+  
+  cloud:  
+    compatibility-verifier:  
+      enabled: false  
+  
+  datasource:  
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ticket}  
+    username: ${DB_USERNAME:ticket}  
+    password: ${DB_PASSWORD}  
+    driver-class-name: org.postgresql.Driver  
+  
+  jpa:  
+    hibernate:  
+      ddl-auto: update  
+  
+  data:  
+    redis:  
+      host: ${REDIS_HOST:localhost}  
+      port: ${REDIS_PORT:6379}  
+  
+logging:
+  level:
+    root: INFO
+    org.ddcn41.queue: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO
+    io.jsonwebtoken: INFO
+
+  
+queue:  
+  max-active-tokens: 3  
+  max-inactive-seconds: 10  
+  wait-time-per-person: 10  
+  
+  
+auth:  
+  cognito:  
+    enabled: ${COGNITO_ENABLED:true}
+    region: ${COGNITO_REGION:ap-northeast-2}  
+    user-pool-id: ${COGNITO_USER_POOL_ID}   
+    client-id: ${COGNITO_CLIENT_ID}
+#    issuer: ${cognito-common.issuer}  
+#    jwks: ${cognito-common.jwks}  
+  
+  
+jwt:  
+  enabled: true  
+  cookie-name: id_token  
+  jwks-cache-duration: 300000  # 5분  
+  
+  cognito:  
+    region: ${COGNITO_REGION:ap-northeast-2}  
+    user-pool-id: ${COGNITO_USER_POOL_ID}  
+    client-id: ${COGNITO_CLIENT_ID}  
+    validate-issuer: true  
+    validate-audience: true  
+    validate-token-use: true  
+  
+  blacklist:  
+    enabled: true  
+    redis:  
+      host: ${REDIS_HOST:localhost}  
+      port: ${REDIS_PORT:6379}  
+      database: ${REDIS_DATABASE:0}  
+      password: ${REDIS_PASSWORD:}  
+      key-prefix: "jwt:blacklist:"  
+      connection-timeout: 2000  
+      command-timeout: 1000  
+  
+use:  
+  legacy:  
+    auth: false

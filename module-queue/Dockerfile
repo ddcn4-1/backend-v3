@@ -16,7 +16,6 @@ RUN chmod +x gradlew
 COPY module-queue/build.gradle module-queue/
 
 # 의존성 다운로드 (캐시 최적화)
-RUN chmod +x gradlew
 RUN ./gradlew dependencies --no-daemon || true
 
 # 소스 코드 복사
@@ -29,8 +28,6 @@ COPY module-queue module-queue
 COPY module-api-admin module-api-admin
 COPY authorization-spring-boot-starter authorization-spring-boot-starter
 
-# (api 모듈은 queue 빌드에 직접 필요 없으면 생략 가능)
-
 # Queue 모듈만 빌드
 RUN ./gradlew :module-queue:bootJar --no-daemon
 
@@ -38,6 +35,9 @@ RUN ./gradlew :module-queue:bootJar --no-daemon
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
+
+# prod 프로필 강제 적용
+ENV SPRING_PROFILES_ACTIVE=prod
 
 # 헬스체크용 curl 설치
 RUN apt-get update && \
