@@ -2,7 +2,7 @@
 
 로컬 실행 자체는 달라진 부분이 없으므로, [backend-v2](https://github.com/ddcn4-1/backend-v2)의 실행 방법을 참고할 것
 
-# Backend-v3 GitHub Actions 기반 Backend CI: ECR Build & Push 자동화
+# [KubeSpray 팀] Backend-v3 GitHub Actions 기반 Backend CI: ECR Build & Push 자동화
 - 버전 / 작성일: v1 / 2025.11.27
 - 작성자: 윤효정
 - 목차:
@@ -16,6 +16,7 @@
 
 ## 1. Overview (개요)
 ### 목표
+- 대상 브랜치 : feat/yhj
 - GitHub Actions를 활용하여 Backend 애플리케이션(main, queue, admin)의 Docker 이미지를 자동 빌드
 - Docker 이미지를 ECR에 자동으로 푸시하는 CI 파이프라인 구성
 - AWS 인증을 GitHub OIDC 방식으로 변경 (github → AWS IAM Role assume 방식)
