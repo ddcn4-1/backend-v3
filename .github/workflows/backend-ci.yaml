@@ -99,8 +99,7 @@ jobs:
         run: |
           cd helm-repo
           
-          # [수정된 부분] 복잡한 주석 찾기 대신, 단순하게 "tag: latest"를 찾아서 교체합니다.
-          sed -i 's/tag: "latest"/tag: "'$IMAGE_TAG'"/' ${{ env.HELM_VALUES_PATH }}
+          sed -i 's/tag: ".*"/tag: "'$IMAGE_TAG'"/' ${{ env.HELM_VALUES_PATH }}
           
           # 변경 사항 확인
           echo "=== Changes made ==="
