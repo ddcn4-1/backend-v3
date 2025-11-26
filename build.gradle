@@ -50,6 +50,7 @@ subprojects {
         testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     }
 
     test {
